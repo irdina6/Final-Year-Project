@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SmartHaven25 | Home</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div id="particles-js"></div>
+
+<nav class="navbar">
+    <div class="nav-left">
+        <span class="brand"><i class="fa-solid fa-house"></i> SmartHaven25</span>
+    </div>
+    <div class="nav-links">
+        <a href="/"><i class="fa-solid fa-gauge"></i> Home</a>
+        <a href="/grafana" target="_blank"><i class="fa-solid fa-chart-line"></i> Grafana</a>
+        <a href="/pantry/list"><i class="fa-solid fa-basket-shopping"></i> Pantry</a>
+        <a href="/logs"><i class="fa-solid fa-list"></i> Logs</a>
+        <a href="/logout" class="logout-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+</nav>
+
+<h1>SmartHaven25 Dashboard</h1>
+<p class="subtitle">Overview + quick controls.</p>
+
+<div class="card-container">
+
+    <!-- MODE -->
+    <div class="card fade-in">
+        <h2><i class="fa-solid fa-person-shelter"></i> Home / Away</h2>
+        <p>Current Mode: <b><span id="mode-status">HOME</span></b></p>
+        <button onclick="sendAction('set_mode_home')">Set HOME</button>
+        <button onclick="sendAction('set_mode_away')">Set AWAY</button>
+        <p class="muted">*Mode buttons also arm/disarm intrusion.</p>
+    </div>
+
+    <!-- SMART DOOR -->
+    <div class="card fade-in">
+        <h2><i class="fa-solid fa-door-closed"></i> Smart Door</h2>
+        <p>Status: <b><span id="door-status">Loading...</span></b></p>
+        <button onclick="sendAction('unlock_door')">Unlock</button>
+        <button onclick="sendAction('lock_door')">Lock</button>
+        <button onclick="window.open('http://localhost:8000/face')">Face Unlock (Laptop)</button>
+    </div>
+
+    <!-- INTRUSION -->
+    <div class="card fade-in">
+        <h2><i class="fa-solid fa-shield"></i> Intrusion Detection</h2>
+        <p>Armed: <b><span id="intrusion-armed">Loading...</span></b></p>
+        <p>Intrusion Mode: <b><span id="intrusion-mode">Loading...</span></b></p>
+        <p>PIR: <span id="pir-status">Loading...</span></p>
+        <p>Noise: <span id="sound-status">Loading...</span></p>
+        <p>Alarm: <b><span id="alarm-status">Loading...</span></b></p>
+        <p class="muted">Last Alarm: <span id="last-alarm">-</span></p>
+        <p class="muted">Reason: <span id="intrusion-reason">-</span></p>
+        <p class="muted">*Intrusion is armed/disarmed by the System Mode (HOME/AWAY).</p>
+    </div>
+
+    <!-- SMART PANTRY -->
+    <div class="card fade-in">
+        <h2><i class="fa-solid fa-basket-shopping"></i> Smart Pantry</h2>
+        <p>Total Products: <b><span id="pantry-count">0</span></b></p>
+        <p>Reminder: <span id="pantry-reminder" class="muted">Checking...</span></p>
+        <p class="muted">Last Added: <span id="pantry-last">-</span></p>
+        <button onclick="window.open('http://localhost:8000/pantry')">Scan Item (Laptop)</button>
+        <button onclick="window.location.href='/pantry/list'">View Pantry List</button>
+    </div>
+    
+    <!-- SMART TRASH -->
+<div class="card fade-in">
+    <h2><i class="fa-solid fa-trash"></i> Smart Trash</h2>
+    <p>Fullness (%) : <b><span id="trash-fill_pct">-</span></b></p>
+    <p>Status: <b><span id="trash-status">UNKNOWN</span></b></p>
+    <p class="muted">LED: <span id="trash-led">-</span></p>
+    <p class="muted">Last Full: <span id="trash-lastfull">-</span></p>
+</div>
+
+<!-- SMART WINDOW -->
+<div class="card fade-in">
+    <h2><i class="fa-solid fa-window-maximize"></i> Smart Window</h2>
+    <p>Mode: <b><span id="window-mode">-</span></b></p>
+    <p>State: <b><span id="window-state">-</span></b></p>
+    <p>Humidity: <span id="window-humidity">-</span></p>
+    <p>Light: <span id="window-lux">-</span></p>
+    <p class="muted">Angle: <span id="window-angle">-</span></p>
+    <button onclick="sendAction('window_auto')">Auto</button>
+    <button onclick="sendAction('window_mode_manual')">Manual</button>
+    <div class="row">
+        <button onclick="sendAction('window_closed')">Closed</button>
+        <button onclick="sendAction('window_normal')">Normal</button>
+        <button onclick="sendAction('window_ventilate')">Vent</button>
+        <button onclick="sendAction('window_open')">Open</button>
+    </div>
+</div>
+
+<!-- AMBIENT LIGHTING -->
+<div class="card fade-in">
+    <h2><i class="fa-solid fa-lightbulb"></i> Ambient Lighting</h2>
+    <p>Mode: <b><span id="light-mode">-</span></b></p>
+    <p>State: <b><span id="light-state">-</span></b></p>
+    <p>Light Level: <span id="light-lux">-</span></p>
+    <p class="muted">Duty: <span id="light-duty">-</span></p>
+    <button onclick="sendAction('light_auto')">Auto</button>
+    <button onclick="sendAction('light_manual')">Manual</button>
+    <div class="row">
+        <button onclick="sendAction('light_off')">Off</button>
+        <button onclick="sendAction('light_dim')">Dim</button>
+        <button onclick="sendAction('light_on')">On</button>
+    </div>
+</div>
+
+
+<div class="card">
+  <h3>❄️ Schedule Aircon</h3>
+
+  <p>Time: <span id="schedule-aircon-time">--</span></p>
+  <p>State: <span id="schedule-aircon-state">--</span></p>
+  <p>Duty: <span id="schedule-aircon-duty">--</span></p>
+  <p>Status: <span id="schedule-aircon-active">--</span></p>
+</div>
+
+    <!-- ENERGY -->
+    <div class="card fade-in">
+        <h2><i class="fa-solid fa-bolt"></i> Energy Monitoring</h2>
+
+        <p>Aircon (Fan) Usage: <b><span id="energy-fan-usage">-</span></b></p>
+        <p class="muted" style="margin-top:10px;">
+            Shows usage levels only (Low / Normal / High).
+        </p>
+	<p>Fan Current: <b><span id="energy-current-ma">–</span> mA</b></p>
+	<p>Fan Power: <b><span id="energy-power-mw">–</span> mW</b></p>
+    </div>
+
+
+    <!-- AIRCON (FAN) CONTROL -->
+    <div class="card fade-in">
+        <h2><i class="fa-solid fa-fan"></i> Aircon (Fan)</h2>
+
+        <p>Temperature: <b><span id="temp-c">-</span></b></p>
+
+        <p>Mode: <b><span id="fan-mode">-</span></b></p>
+        <p>Duty: <b><span id="fan-duty">-</span></b></p>
+        <p>Usage Level: <b><span id="fan-usage">-</span></b></p>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+            <button onclick="sendAction('fan_auto')">AUTO</button>
+            <button onclick="sendAction('fan_manual')">MANUAL</button>
+            <button onclick="sendAction('fan_on')">ON (100%)</button>
+            <button onclick="sendAction('fan_off')">OFF (0%)</button>
+        </div>
+
+        <p style="margin-top:10px; font-size:0.85em; opacity:0.8;">
+            Tip: keep AUTO for temperature-based control; use MANUAL for demos.
+        </p>
+    </div>
+
+
+
+    <!-- FALL DETECTION -->
+    <div class="card fade-in">
+        <h2><i class="fa-solid fa-person-falling"></i> Fall Detection</h2>
+
+        <p>Status: <b><span id="fall-status">-</span></b></p>
+        <p>Last Event: <span id="fall-last">-</span></p>
+        
+        <p class="muted">Reason: <span id="fall-reason">-</span></p>
+
+        <button onclick="window.open('http://100.86.138.53:10000/')">Open Fall Detection (Laptop)</button>
+        <p class="muted" style="margin-top:10px;">
+            Fall detection runs on the laptop camera.
+        </p>
+    </div>
+
+
+<!-- NOISE COACH -->
+    <div class="card fade-in">
+        <h2><i class="fa-solid fa-volume-high"></i> Noise Coach</h2>
+
+        <p>State: <b><span id="noise-state">OFF</span></b></p>
+        <!-- RMS is still logged and sent to InfluxDB; we just don't show it on the homepage -->
+        <p>Sustained Threshold: <span id="noise-th">-</span></p>
+        <p>Impact Threshold: <span id="impact-th">-</span></p>
+        <p>Alerts Today:
+            <span id="noise-alerts">0</span> sustained,
+            <span id="impact-alerts">0</span> impact
+        </p>
+
+        <button onclick="noiseStart()">Start</button>
+        <button onclick="noiseCalibrate()">Continue Calibrating</button>
+        <button onclick="noiseStop()">Stop</button>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script src="/static/particles.js"></script>
+<script src="/static/script.js"></script>
+</body>
+</html>

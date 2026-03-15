@@ -1,0 +1,46 @@
+[
+  {
+    "name": "Maggi tomyam cup",
+    "category": "instant_food",
+    "expiry_days": 14,
+    "expiry_date": "2026-02-06",
+    "barcode": "9556001000750",
+    "brand": "Maggi",
+    "source": "pantry_cam",
+    "added_at": "2026-02-06 19:53:35",
+    "ocr": ""
+  },
+  {
+    "name": "Bolu oreo soft cake",
+    "category": "snacks",
+    "expiry_days": 14,
+    "expiry_date": "2026-06-21",
+    "barcode": "7622300335809",
+    "brand": "Oreo",
+    "source": "pantry_cam",
+    "added_at": "2026-02-06 10:29:59",
+    "ocr": ""
+  },
+  {
+    "name": "Bolu oreo soft cake",
+    "category": "snacks",
+    "expiry_days": 14,
+    "expiry_date": "2026-06-24",
+    "barcode": "7622300335809",
+    "brand": "Oreo",
+    "source": "pantry_cam",
+    "added_at": "2026-02-06 10:28:31",
+    "ocr": ""
+  },
+  {
+    "name": "Extreme Buldak ZZALDDUK",
+    "category": "snacks",
+    "expiry_days": 14,
+    "expiry_date": "2026-02-04",
+    "barcode": "8801073311183",
+    "brand": "Samyang",
+    "source": "pantry_cam",
+    "added_at": "2026-02-04 15:36:21",
+    "ocr": ""
+  }
+]

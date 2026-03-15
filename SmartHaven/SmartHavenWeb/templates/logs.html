@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SmartHaven25 | Logs</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div id="particles-js"></div>
+
+<nav class="navbar">
+    <div class="nav-left">
+        <span class="brand"><i class="fa-solid fa-house"></i> SmartHaven25</span>
+    </div>
+    <div class="nav-links">
+        <a href="/"><i class="fa-solid fa-gauge"></i> Home</a>
+        <a href="/grafana" target="_blank"><i class="fa-solid fa-chart-line"></i> Grafana</a>
+        <a href="/pantry/list"><i class="fa-solid fa-basket-shopping"></i> Pantry</a>
+        <a href="/logs"><i class="fa-solid fa-list"></i> Logs</a>
+        <a href="/logout" class="logout-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+</nav>
+
+<h1>Event Logs</h1>
+<p class="subtitle">Filter by subsystem.</p>
+
+<div class="filter-row fade-in">
+    <button class="filter-btn active-filter" data-log-filter="all" onclick="setLogFilter('all')">All</button>
+    <button class="filter-btn" data-log-filter="system" onclick="setLogFilter('system')">System</button>
+    <button class="filter-btn" data-log-filter="door" onclick="setLogFilter('door')">Door</button>
+    <button class="filter-btn" data-log-filter="intrusion" onclick="setLogFilter('intrusion')">Intrusion</button>
+    <button class="filter-btn" data-log-filter="window" onclick="setLogFilter('window')">Window</button>
+    <button class="filter-btn" data-log-filter="lighting" onclick="setLogFilter('lighting')">Lighting</button>
+    <button class="filter-btn" data-log-filter="trash" onclick="setLogFilter('trash')">Trash</button>
+    <button class="filter-btn" data-log-filter="pantry" onclick="setLogFilter('pantry')">Pantry</button>
+    <button class="filter-btn" data-log-filter="noise" onclick="setLogFilter('noise')">Noise</button>
+    <button class="filter-btn" data-log-filter="fall" onclick="setLogFilter('fall')">Fall</button>
+    <button class="filter-btn" data-log-filter="energy" onclick="setLogFilter('energy')">Energy</button>
+    <button class="filter-btn" data-log-filter="other" onclick="setLogFilter('other')">Other</button>
+</div>
+
+<div class="log-box fade-in">
+    <ul id="log-list"></ul>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script src="/static/particles.js"></script>
+<script src="/static/script.js"></script>
+</body>
+</html>

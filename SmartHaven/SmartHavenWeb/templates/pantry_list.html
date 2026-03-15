@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SmartHaven25 | Pantry</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div id="particles-js"></div>
+
+<nav class="navbar">
+    <div class="nav-left">
+        <span class="brand"><i class="fa-solid fa-house"></i> SmartHaven25</span>
+    </div>
+    <div class="nav-links">
+        <a href="/"><i class="fa-solid fa-gauge"></i> Home</a>
+        <a href="/grafana" target="_blank"><i class="fa-solid fa-chart-line"></i> Grafana</a>
+        <a href="/pantry/list"><i class="fa-solid fa-basket-shopping"></i> Pantry</a>
+        <a href="/logs"><i class="fa-solid fa-list"></i> Logs</a>
+        <a href="/logout" class="logout-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+</nav>
+
+<h1>Pantry</h1>
+<p class="subtitle">View your pantry items, or scan new items using the laptop camera.</p>
+
+<div class="card-container">
+
+    <div class="card fade-in">
+        <h2><i class="fa-solid fa-barcode"></i> Scan</h2>
+        <p class="muted">Barcode scanning runs on your laptop camera server.</p>
+        <button onclick="window.open('/pantry', '_blank')">Scan Item (Laptop)</button>
+    </div>
+
+    <div class="card fade-in" style="grid-column: 1 / -1;">
+        <h2><i class="fa-solid fa-list-check"></i> Pantry List</h2>
+        <p class="muted">Total items: <b><span id="pantry-total">0</span></b> | Last added: <span id="pantry-last">-</span></p>
+
+        <div style="overflow-x:auto;">
+            <table class="log-table">
+                <thead>
+                    <tr>
+                        <th>Added At</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Brand</th>
+                        <th>Barcode</th>
+                        <th>Expiry</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody id="pantry-tbody">
+                    <tr><td colspan="7" class="muted">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p class="muted" style="margin-top:10px;">
+            *If expiry date is not available, it will show as “-”.
+        </p>
+    </div>
+
+</div>
+
+<script src="/static/particles.js"></script>
+<script>
+async function refreshPantry() {
+    try {
+        const res = await fetch("/api/sensors");
+        const data = await res.json();
+
+        const items = Array.isArray(data.pantry_items) ? data.pantry_items : [];
+        document.getElementById("pantry-total").innerText = items.length;
+        document.getElementById("pantry-last").innerText = data.pantry_last_added ?? "-";
+
+        const tbody = document.getElementById("pantry-tbody");
+        tbody.innerHTML = "";
+
+        if (items.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="muted">No pantry items yet. Use “Scan Item (Laptop)”.</td></tr>';
+            return;
+        }
+
+        for (const it of items) {
+            const tr = document.createElement("tr");
+            const expiry = (it.expiry_date ?? (it.expiry_days != null ? (it.expiry_days + " days") : "-")) ?? "-";
+            tr.innerHTML = `
+                <td>${it.added_at ?? "-"}</td>
+                <td>${it.name ?? "-"}</td>
+                <td>${it.category ?? "-"}</td>
+                <td>${it.brand ?? "-"}</td>
+                <td>${it.barcode ?? "-"}</td>
+                <td>${expiry}</td>
+                <td>${it.source ?? "-"}</td>
+            `;
+            tbody.appendChild(tr);
+        }
+    } catch (e) {
+        const tbody = document.getElementById("pantry-tbody");
+        tbody.innerHTML = '<tr><td colspan="7" class="muted">Failed to load pantry items.</td></tr>';
+    }
+}
+refreshPantry();
+setInterval(refreshPantry, 3000);
+</script>
+</body>
+</html>

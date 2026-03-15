@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SmartHaven25 | Login</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="center-page">
+
+<div class="login-card card fade-in">
+    <h1><i class="fa-solid fa-house-lock"></i> SmartHaven25</h1>
+    <p class="subtitle">Sign in to access your smart home dashboard.</p>
+
+    {% if error %}
+        <div class="badge badge-danger">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" class="login-form">
+        <label>Username</label>
+        <input type="text" name="username" required>
+
+        <label>Password</label>
+        <input type="password" name="password" required>
+
+        <button type="submit">Login</button>
+    </form>
+</div>
+
+</body>
+</html>
