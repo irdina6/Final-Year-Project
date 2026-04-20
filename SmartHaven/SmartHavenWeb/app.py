@@ -123,7 +123,7 @@ def home():
 @app.route("/grafana")
 @login_required
 def grafana():
-    return redirect("http://192.168.0.11:3000")
+    return redirect("http://{PI_IP_ADDRESS}:3000")
 
 
 @app.route("/logs")
