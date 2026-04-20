@@ -63,10 +63,10 @@ except Exception:
 # =========================================================
 # InfluxDB v1
 # =========================================================
-INFLUX_USER = 'root'
-INFLUX_PASSWORD = 'root'
-INFLUX_DBNAME = 'mydb'
-INFLUX_HOST = 'localhost'
+INFLUX_USER = 'add_user'
+INFLUX_PASSWORD = 'add_password'
+INFLUX_DBNAME = 'add_dbname'
+INFLUX_HOST = 'add_host'
 INFLUX_PORT = 8086
 
 HAS_INFLUX = False
