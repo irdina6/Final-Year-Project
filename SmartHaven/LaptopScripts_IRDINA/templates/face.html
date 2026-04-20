@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SmartHaven25 | Face Unlock</title>
+
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* Page layout for 2 cards side-by-side */
+        .card-grid{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap:24px;
+            max-width:1200px;
+            margin: 18px auto;
+            padding: 0 16px;
+            align-items: stretch;
+        }
+        @media (max-width: 900px){
+            .card-grid{ grid-template-columns: 1fr; }
+        }
+        .card{ height:100%; }
+    </style>
+</head>
+
+<body>
+<div id="particles-js"></div>
+
+<nav class="navbar">
+    <div class="nav-left">
+        <span class="brand"><i class="fa-solid fa-house"></i> SmartHaven25</span>
+    </div>
+
+    <div class="nav-links">
+        <!-- Goes back to PI control page -->
+        <a href="http://{{ pi_ip }}:8080/" target="_blank">
+            <i class="fa-solid fa-sliders"></i> Back to Home
+        </a>
+
+        <button id="theme-toggle" class="theme-btn">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+    </div>
+</nav>
+
+<h1>Face Recognition Door Unlock</h1>
+
+<div class="card-grid">
+
+    <div class="card fade-in">
+        <h2><i class="fa-solid fa-camera"></i> Camera</h2>
+
+        <p style="opacity:0.9; margin-bottom: 12px;">
+            Click <b>Start</b>. Your browser will ask for webcam permission.
+            When an authorized face is detected continuously, the system will unlock the door.
+            When the face disappears, it will lock again.
+        </p>
+
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+            <button onclick="startFace()"><i class="fa-solid fa-play"></i> Start</button>
+            <button onclick="stopFace()"><i class="fa-solid fa-stop"></i> Stop</button>
+
+            <span style="opacity:0.85;">
+                Status: <b id="statusText">Idle</b>
+            </span>
+        </div>
+
+        <hr style="margin: 15px 0; opacity: 0.3;">
+
+        <video id="video" autoplay playsinline
+               style="width:100%; max-width:780px; border-radius:14px; display:none;"></video>
+
+        <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+    </div>
+
+    <div class="card fade-in">
+        <h2><i class="fa-solid fa-lock"></i> Door Status</h2>
+
+        <p><b>Authorized Face:</b> <span id="authorizedText">-</span></p>
+        <p><b>Faces Found:</b> <span id="facesFoundText">-</span></p>
+        <p><b>Best Confidence:</b> <span id="bestConfText">-</span></p>
+        <p><b>Threshold:</b> <span id="thresholdText">-</span></p>
+
+        <hr style="margin: 15px 0; opacity: 0.3;">
+
+        <p><b>Door State:</b> <span id="doorStateText">-</span></p>
+        <p><b>Last Action:</b> <span id="lastActionText">-</span></p>
+
+        <hr style="margin: 15px 0; opacity: 0.3;">
+        <p style="opacity:.85; font-size: 0.95rem;">
+            Tip: If webcam is blocked, check Chrome:
+            <b>Lock icon → Site settings → Camera → Allow</b>.
+        </p>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script src="/static/particles.js"></script>
+
+<script>
+let stream = null;
+let sending = false;
+let lastSend = 0;
+
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+async function startFace() {
+    if (sending) return;
+
+    document.getElementById("statusText").innerText = "Requesting camera…";
+
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 640, height: 480 },
+            audio: false
+        });
+    } catch (e) {
+        document.getElementById("statusText").innerText = "Camera blocked";
+        alert("Camera permission denied. Please allow webcam access.");
+        return;
+    }
+
+    video.srcObject = stream;
+    video.style.display = "block";
+
+    sending = true;
+    document.getElementById("statusText").innerText = "Running";
+    loopSendFrames();
+}
+
+function stopFace() {
+    sending = false;
+    document.getElementById("statusText").innerText = "Stopped";
+
+    if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+    }
+    video.style.display = "none";
+}
+
+async function loopSendFrames() {
+    while (sending) {
+        const now = Date.now();
+        if (now - lastSend < 250) {
+            await new Promise(r => setTimeout(r, 60));
+            continue;
+        }
+        lastSend = now;
+
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+
+        try {
+            const res = await fetch("/frame", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ image: dataUrl })
+            });
+            const data = await res.json();
+
+            if (!data.ok) continue;
+
+            document.getElementById("authorizedText").innerText = data.authorized ? "YES" : "NO";
+            document.getElementById("facesFoundText").innerText = data.faces_found ?? "-";
+            document.getElementById("bestConfText").innerText =
+                (data.best_confidence === null || data.best_confidence === undefined)
+                    ? "-"
+                    : Number(data.best_confidence).toFixed(2);
+            document.getElementById("thresholdText").innerText = data.threshold ?? "-";
+
+            document.getElementById("doorStateText").innerText = data.door_state ?? "-";
+            document.getElementById("lastActionText").innerText = data.last_action ?? "-";
+
+        } catch (e) {
+            document.getElementById("statusText").innerText = "Server error";
+        }
+
+        await new Promise(r => setTimeout(r, 60));
+    }
+}
+
+const toggleBtn = document.getElementById("theme-toggle");
+if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+        document.body.classList.toggle("light-mode");
+        toggleBtn.innerHTML = document.body.classList.contains("light-mode")
+            ? '<i class="fa-solid fa-sun"></i>'
+            : '<i class="fa-solid fa-moon"></i>';
+    });
+}
+</script>
+</body>
+</html>

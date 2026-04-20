@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>SmartHaven25 | Smart Pantry (Laptop)</title>
+
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    .wrap{max-width:1200px; margin:18px auto; padding:0 16px;}
+    .pill{display:inline-block; padding:6px 12px; border-radius:999px; background:rgba(255,255,255,0.08);}
+    .muted{opacity:.85;}
+
+    .grid-2{
+      display:grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap:24px;
+    }
+    @media(max-width: 900px){
+      .grid-2{ grid-template-columns: 1fr; }
+    }
+
+    video{width:100%; max-width:820px; border-radius:14px; margin-top:12px;}
+    pre{white-space:pre-wrap; background:rgba(255,255,255,0.06);
+        padding:12px; border-radius:12px; overflow:auto; max-height: 360px;}
+    input, select{padding:10px; border-radius:10px; border:none; width:240px; max-width:100%;}
+    .ok{color:#78ff9f;}
+    .bad{color:#ff8a8a;}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .kv p{margin: 8px 0;}
+    .hint{font-size:.92rem; opacity:.86;}
+  </style>
+</head>
+
+<body>
+<div id="particles-js"></div>
+
+<nav class="navbar">
+  <div class="nav-left">
+    <span class="brand"><i class="fa-solid fa-house"></i> SmartHaven25</span>
+  </div>
+  <div class="nav-links">
+    <a href="http://{{ pi_ip }}:8080/" target="_blank" rel="noopener">
+      <i class="fa-solid fa-sliders"></i> Back to Home (Pi)
+    </a>
+    <span class="pill">Laptop Camera Mode</span>
+  </div>
+</nav>
+
+<h1>🧺 Smart Pantry (Barcode + Expiry)</h1>
+<div class="wrap grid-2">
+
+  <!-- CAMERA + ACTIONS -->
+  <div class="card fade-in">
+    <h2><i class="fa-solid fa-camera"></i> Camera</h2>
+    <p class="muted">
+      Tip: make barcode fill ~1/3 of frame width, avoid glare, keep steady.
+    </p>
+
+    <div class="row">
+      <button onclick="startCam()"><i class="fa-solid fa-play"></i> Start Camera</button>
+      <button onclick="stopCam()"><i class="fa-solid fa-stop"></i> Stop</button>
+      <button onclick="scanBarcode()"><i class="fa-solid fa-barcode"></i> Scan Barcode</button>
+      <button onclick="scanExpiry()"><i class="fa-solid fa-calendar-days"></i> Scan Expiry</button>
+      <button onclick="saveItem()"><i class="fa-solid fa-floppy-disk"></i> Save to Pi</button>
+    </div>
+
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <hr style="margin: 16px 0; opacity:.3;">
+
+    <h2><i class="fa-solid fa-box"></i> Detected Item</h2>
+    <div class="kv">
+      <p><b>Barcode:</b> <span id="barcode">-</span></p>
+      <p><b>Name:</b> <span id="name">-</span></p>
+      <p><b>Brand:</b> <span id="brand">-</span></p>
+      <p><b>Expiry Date:</b> <span id="expiry">-</span></p>
+      <p><b>Pi Save Status:</b> <span id="piStatus">-</span></p>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+      <input id="manualExpiry" placeholder="Manual expiry (DD/MM/YYYY)">
+      <select id="category">
+        <option value="unknown">Category: unknown</option>
+        <option value="snacks">snacks</option>
+        <option value="drinks">drinks</option>
+        <option value="instant_food">instant_food</option>
+        <option value="dairy">dairy</option>
+        <option value="frozen">frozen</option>
+        <option value="canned">canned</option>
+        <option value="others">others</option>
+      </select>
+    </div>
+
+    <p style="margin-top:10px;">
+      <b>Status:</b> <span id="status">Idle</span>
+    </p>
+
+    <p class="hint">
+      If barcode keeps failing: keep barcode closer + steadier. Web snapshots are sensitive to blur.
+    </p>
+  </div>
+
+  <!-- LATEST RESPONSE / DEBUG -->
+  <div class="card fade-in">
+    <h2><i class="fa-solid fa-bug"></i> Debug / Last Response</h2>
+    <p class="muted">
+      This helps you see the exact error (e.g., <code>no_barcode_confirmed</code>, <code>pi_error</code>).
+    </p>
+    <pre id="debug">-</pre>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script src="/static/particles.js"></script>
+
+<script>
+let stream = null;
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+function setDebug(obj){
+  try{ document.getElementById("debug").innerText = JSON.stringify(obj, null, 2); }
+  catch(e){ document.getElementById("debug").innerText = String(obj); }
+}
+
+async function startCam(){
+  if(stream) return;
+
+  document.getElementById("status").innerText = "Requesting camera…";
+
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    });
+  }catch(e){
+    document.getElementById("status").innerHTML = "<span class='bad'>Camera blocked</span>";
+    alert("Camera permission denied. Allow webcam in browser site settings.");
+    return;
+  }
+
+  video.srcObject = stream;
+
+  await new Promise(r => video.onloadedmetadata = r);
+
+  canvas.width = video.videoWidth || 1280;
+  canvas.height = video.videoHeight || 720;
+
+  document.getElementById("status").innerHTML = "<span class='ok'>Camera running</span>";
+}
+
+function stopCam(){
+  if(stream){
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
+  document.getElementById("status").innerText = "Stopped";
+}
+
+function snapshot(){
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/jpeg", 0.95); // higher quality helps barcodes
+}
+
+async function postJSON(url, payload){
+  const res = await fetch(url, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json().catch(() => ({}));
+  data._http_status = res.status;
+  return data;
+}
+
+async function scanBarcode(){
+  if(!stream){ await startCam(); }
+  document.getElementById("status").innerText = "Scanning barcode…";
+
+  // multi-frame retry (huge improvement vs one-shot)
+  for(let i=0;i<10;i++){
+    const data = await postJSON("/barcode", { image: snapshot() });
+    setDebug(data);
+
+    if(data.ok && data.found){
+      document.getElementById("barcode").innerText = data.barcode;
+      document.getElementById("name").innerText = data.name || "-";
+      document.getElementById("brand").innerText = data.brand || "-";
+      document.getElementById("status").innerHTML = "<span class='ok'>Barcode detected</span>";
+      return;
+    }
+    await new Promise(r => setTimeout(r, 120));
+  }
+
+  document.getElementById("status").innerHTML = "<span class='bad'>No barcode detected</span>";
+}
+
+async function scanExpiry(){
+  if(!stream){ await startCam(); }
+  document.getElementById("status").innerText = "Scanning expiry…";
+
+  // try a few frames too
+  for(let i=0;i<6;i++){
+    const data = await postJSON("/expiry_ocr", { image: snapshot() });
+    setDebug(data);
+
+    if(data.ok && data.found){
+      document.getElementById("expiry").innerText = data.expiry;
+      document.getElementById("status").innerHTML = "<span class='ok'>Expiry detected</span>";
+      return;
+    }
+    await new Promise(r => setTimeout(r, 140));
+  }
+
+  document.getElementById("status").innerHTML =
+    "<span class='bad'>Expiry not detected – enter manually</span>";
+}
+
+async function saveItem(){
+  const manual = document.getElementById("manualExpiry").value || "";
+  const cat = document.getElementById("category").value || "unknown";
+
+  document.getElementById("status").innerText = "Saving…";
+
+  const data = await postJSON("/pantry/save", { manual_expiry: manual, category: cat });
+  setDebug(data);
+
+  if(data.ok && data.saved){
+    document.getElementById("piStatus").innerHTML = "<span class='ok'>Saved to Pi ✅</span>";
+    document.getElementById("status").innerHTML = "<span class='ok'>Item saved</span>";
+  }else{
+    const why = data.error || data.why || ("http_" + (data._http_status ?? "?"));
+    document.getElementById("piStatus").innerHTML = "<span class='bad'>Failed ❌ (" + why + ")</span>";
+    document.getElementById("status").innerHTML = "<span class='bad'>Save failed: " + why + "</span>";
+  }
+}
+</script>
+</body>
+</html>
