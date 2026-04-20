@@ -36,10 +36,10 @@ pantry.load_pantry_from_disk()
 app = Flask(__name__)
 app.secret_key = "smarthaven25_super_secret"
 
-USERNAME = "admin"
-PASSWORD = "smarthaven25"
+USERNAME = "add_username"
+PASSWORD = "add_password"
 
-API_KEY = "smarthaven25_key"  # used by laptop services calling Pi APIs
+API_KEY = "add_key"  # used by laptop services calling Pi APIs
 
 
 def is_authorized_api() -> bool:
