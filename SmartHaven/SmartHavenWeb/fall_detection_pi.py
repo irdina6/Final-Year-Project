@@ -38,8 +38,8 @@ app = Flask(__name__)
 # LAPTOP STREAM (LAN + Tailscale)
 # =========================
 # Fill BOTH. Service will try LAN first, then Tailscale.
-LAPTOP_LAN_IP = "192.168.0.7"     # <-- change to your laptop LAN IP (same WiFi as Pi)
-LAPTOP_TS_IP  = "100.86.138.53"    # <-- your laptop Tailscale IP
+LAPTOP_LAN_IP = "LAPTOP_IP_ADRESS"     # <-- change to your laptop LAN IP (same WiFi as Pi)
+LAPTOP_TS_IP  = "LAPTOP_TAILSCALE_IP"    # <-- your laptop Tailscale IP
 LAPTOP_PORT   = 10000
 
 STREAM_URL_LAN = f"http://{LAPTOP_LAN_IP}:{LAPTOP_PORT}/video_feed"
@@ -51,21 +51,21 @@ STREAM_URL_TS  = f"http://{LAPTOP_TS_IP}:{LAPTOP_PORT}/video_feed"
 PI_WEB_PORT = 5001  # this file serves on this port
 
 # If you want Telegram command /tailscale message to show clickable Pi URLs:
-PI_TS_IP = "100.124.177.96"  # <-- Pi Tailscale IP (optional, used in messages only)
+PI_TS_IP = "PI_TAILSCALE_IP"  # <-- Pi Tailscale IP (optional, used in messages only)
 
 # =========================
 # SmartHavenWeb (on same Pi or another host)
 # =========================
 # If SmartHavenWeb runs on the SAME Pi, keep localhost:
 SMART_BASE_URL = "http://127.0.0.1:8080"  # <-- change if your SmartHavenWeb port differs
-SMART_API_KEY = "smarthaven25_key"        # must match API_KEY in SmartHavenWeb (or "" to disable)
+SMART_API_KEY = "add_key"        # must match API_KEY in SmartHavenWeb (or "" to disable)
 
 # =========================
 # TELEGRAM SETTINGS (optional)
 # =========================
 ENABLE_TELEGRAM = True
-BOT_TOKEN = "8589500679:AAEsqKmXaO3BYrEh_HcI2ryxLWJ3xfX_H2s"
-CHAT_ID = "-1003708109417"
+BOT_TOKEN = "INSERT_BOT_TOKEN"
+CHAT_ID = "INSERT_CHAT_ID"
 TELEGRAM_API = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
 # =========================
