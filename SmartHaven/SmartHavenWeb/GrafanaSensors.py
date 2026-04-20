@@ -8,10 +8,10 @@ from influxdb import InfluxDBClient
 # ===============================
 # INFLUXDB v1 SETTINGS
 # ===============================
-USER = "root"
-PASSWORD = "root"
-DBNAME = "mydb"
-HOST = "localhost"
+USER = "insert_user"
+PASSWORD = "insert_password"
+DBNAME = "insert_dbname"
+HOST = "insert_host"
 PORT_DB = 8086
 
 db = InfluxDBClient(host=HOST, port=PORT_DB, username=USER, password=PASSWORD, database=DBNAME)
